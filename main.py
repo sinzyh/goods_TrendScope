@@ -14,7 +14,8 @@ from excel_handler import (
     insert_traffic_cycle_images,
     insert_sales_trend_images,
     insert_price_trend_images,
-    insert_product_images
+    insert_product_images,
+    delete_column_from_excel
 )
 from format_excel_style import format_excel_style
 from langchain_openai import ChatOpenAI
@@ -26,6 +27,7 @@ load_dotenv()
 def prepare_dataframe_columns(df: pd.DataFrame) -> list:
     """准备DataFrame的列顺序"""
     columns_order = [
+        "商品链接",
         "图片链接",
         "asin",
         "产品标题",
@@ -64,16 +66,7 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
         else:
             columns_order.append("核心词周期图")
     
-    # 如果"价格趋势图"列不存在，创建它
-    if "价格趋势图" not in df.columns:
-        df["价格趋势图"] = None
-        if "价格" in columns_order:
-            price_idx = columns_order.index("价格")
-            columns_order.insert(price_idx, "价格趋势图")
-        else:
-            columns_order.append("价格趋势图")
-    
-    # 如果"价格趋势类型"列不存在，创建它
+    # 如果"价格趋势类型"列不存在，创建它（应该在价格趋势图之前）
     if "价格趋势类型" not in df.columns:
         df["价格趋势类型"] = None
         if "价格" in columns_order:
@@ -81,6 +74,27 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
             columns_order.insert(price_idx, "价格趋势类型")
         else:
             columns_order.append("价格趋势类型")
+    
+    # 如果"价格趋势图"列不存在，创建它（应该在价格趋势类型之后）
+    if "价格趋势图" not in df.columns:
+        df["价格趋势图"] = None
+        if "价格趋势类型" in columns_order:
+            trend_type_idx = columns_order.index("价格趋势类型")
+            columns_order.insert(trend_type_idx, "价格趋势图")
+        elif "价格" in columns_order:
+            price_idx = columns_order.index("价格")
+            columns_order.insert(price_idx, "价格趋势图")
+        else:
+            columns_order.append("价格趋势图")
+    
+    # 如果"商品链接"列不存在，创建它
+    if "商品链接" not in df.columns:
+        df["商品链接"] = None
+        if "图片链接" in columns_order:
+            img_link_idx = columns_order.index("图片链接")
+            columns_order.insert(img_link_idx, "商品链接")  # 插入到图片链接之前
+        else:
+            columns_order.insert(0, "商品链接")
 
     return columns_order
 
@@ -129,7 +143,8 @@ if __name__ == '__main__':
         if i in [90]:
             print(i)
         i = i + 1
-        
+        if i >5:
+            break
         process_row_data(
             idx=idx,
             row=row,
@@ -144,6 +159,9 @@ if __name__ == '__main__':
     date_str = datetime.now().strftime("%Y%m%d")
     output_path = f'./result/流量周期分析结果_{date_str}.xlsx'
     
+    # 6.1 根据ASIN生成商品链接
+    df['商品链接'] = df['asin'].apply(lambda asin: f'https://www.amazon.com/dp/{asin}' if pd.notna(asin) else None)
+    
     columns_order = prepare_dataframe_columns(df)
     df = df[columns_order]
     
@@ -156,6 +174,9 @@ if __name__ == '__main__':
     insert_sales_trend_images(output_path, sales_trend_images, df_index_mapping)
     insert_price_trend_images(output_path, price_trend_images, df_index_mapping)
     insert_product_images(output_path)
+    
+    # 8.1 删除"图片链接"列
+    delete_column_from_excel(output_path, "图片链接")
     
     # 9. 调整Excel文件样式
     print(f'调整{output_path}文件样式')

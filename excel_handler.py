@@ -36,9 +36,9 @@ def insert_traffic_cycle_images(output_path: str, traffic_cycle_images: Dict[int
             print(f'已创建"核心词周期图"列（第{chart_col_idx}列）')
 
         # 现在 chart_col_idx 一定存在，插入图片
-        # 将图片放到"核心词周期图"列的后一个单元格中
+        # 将图片放到"核心词周期图"列本身的位置
         if chart_col_idx:
-            target_col_idx = chart_col_idx + 1
+            target_col_idx = chart_col_idx
             col_letter = get_column_letter(target_col_idx)
             # 确保目标列存在（若越界会自动扩展），并加宽以容纳图片
             if ws.column_dimensions[col_letter].width is None or ws.column_dimensions[col_letter].width < 60:
@@ -118,9 +118,9 @@ def insert_sales_trend_images(output_path: str, sales_trend_images: Dict[int, Op
             print(f'已创建"销量趋势图"列（第{sales_chart_col_idx}列）')
 
         # 现在 sales_chart_col_idx 一定存在，插入图片
-        # 将图片放到"销量趋势图"列的后一个单元格中
+        # 将图片放到"销量趋势图"列本身的位置
         if sales_chart_col_idx:
-            target_col_idx = sales_chart_col_idx + 1
+            target_col_idx = sales_chart_col_idx
             col_letter = get_column_letter(target_col_idx)
             # 确保目标列存在（若越界会自动扩展），并加宽以容纳图片
             if ws.column_dimensions[col_letter].width is None or ws.column_dimensions[col_letter].width < 50:
@@ -198,9 +198,9 @@ def insert_price_trend_images(output_path: str, price_trend_images: Dict[int, Op
             print(f'已创建"价格趋势图"列（第{price_chart_col_idx}列）')
 
         # 现在 price_chart_col_idx 一定存在，插入图片
-        # 将图片放到"价格趋势图"列的后一个单元格中（与其他图保持一致）
+        # 将图片放到"价格趋势图"列本身的位置
         if price_chart_col_idx:
-            target_col_idx = price_chart_col_idx + 1
+            target_col_idx = price_chart_col_idx
             col_letter = get_column_letter(target_col_idx)
             # 确保目标列存在（若越界会自动扩展），并加宽以容纳图片
             if ws.column_dimensions[col_letter].width is None or ws.column_dimensions[col_letter].width < 50:
@@ -274,19 +274,36 @@ def insert_product_images(output_path: str):
         if link_col_idx is None:
             print('警告: 未找到"图片链接"列，跳过图片插入')
         else:
-            # 如果"图片"列不存在，插入到"图片链接"列之后
+            # 如果"图片"列不存在，插入到"图片链接"列的位置
+            # 注意：插入新列后，"图片链接"列会移动到下一列
             if img_col_idx is None:
-                img_col_idx = link_col_idx + 1
+                img_col_idx = link_col_idx
                 ws.insert_cols(img_col_idx)  # 插入一列
                 ws.cell(header_row, img_col_idx, "图片")
-                print(f'已创建"图片"列（第{img_col_idx}列，位于"图片链接"之后）')
+                print(f'已创建"图片"列（第{img_col_idx}列，位于"图片链接"列位置）')
+                # 插入新列后，"图片链接"列移动到下一列
+                link_col_idx = link_col_idx + 1
+                
+                # 立即清除新插入列的所有单元格值和超链接（防止复制了原列的内容）
+                for row in range(2, ws.max_row + 1):
+                    cell = ws.cell(row, img_col_idx)
+                    cell.value = None
+                    cell.hyperlink = None  # 清除超链接
 
             col_letter = get_column_letter(img_col_idx)
+            
+            # 清除整个"图片"列的所有单元格值和超链接（确保没有URL文本和超链接）
+            for row in range(2, ws.max_row + 1):
+                cell = ws.cell(row, img_col_idx)
+                cell.value = None
+                cell.hyperlink = None  # 清除超链接
+            
             inserted_img_count = 0
             session = requests.Session()
 
             for row in range(2, ws.max_row + 1):
                 url = ws.cell(row, link_col_idx).value
+
                 if not url:
                     continue
 
@@ -310,7 +327,14 @@ def insert_product_images(output_path: str):
                         current_height = ws.row_dimensions[row].height
                         if current_height is None or current_height < 80:
                             ws.row_dimensions[row].height = 80
-
+                        
+                        # 获取单元格对象
+                        cell = ws.cell(row, img_col_idx)
+                        
+                        # 清除单元格的值和超链接（确保没有URL文本和超链接）
+                        cell.value = None
+                        cell.hyperlink = None
+                        
                         # 直接锚定到对应单元格
                         ws.add_image(img, f"{col_letter}{row}")
                         inserted_img_count += 1
@@ -354,3 +378,35 @@ def insert_product_images(output_path: str):
         import traceback
         traceback.print_exc()
 
+
+def delete_column_from_excel(output_path: str, column_name: str):
+    """从Excel文件中删除指定列
+    
+    Args:
+        output_path: Excel文件路径
+        column_name: 要删除的列名
+    """
+    try:
+        wb = load_workbook(output_path)
+        ws = wb.active
+        
+        # 找到要删除的列位置
+        header_row = 1
+        col_idx = None
+        for idx, cell in enumerate(ws[header_row], 1):
+            if cell.value == column_name:
+                col_idx = idx
+                break
+        
+        if col_idx is None:
+            print(f'警告: 未找到"{column_name}"列，跳过删除操作')
+            return
+        
+        # 删除列
+        ws.delete_cols(col_idx)
+        wb.save(output_path)
+        print(f'成功删除"{column_name}"列（原第{col_idx}列）')
+    except Exception as e:
+        print(f'删除列"{column_name}"时出错: {e}')
+        import traceback
+        traceback.print_exc()

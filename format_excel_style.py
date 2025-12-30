@@ -18,7 +18,7 @@ def format_excel_style(excel_path: str):
         
         # 需要设置列宽和换行的列（列宽增大 + 数据换行）
         wrap_columns = {
-            "图片链接": 30,
+            "商品链接": 30,
             "产品标题": 40,
             "核心词周期": 40,
         }
