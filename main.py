@@ -19,6 +19,7 @@ from excel_handler import (
 )
 from format_excel_style import format_excel_style
 from langchain_openai import ChatOpenAI
+from analyze_product_value import analyze_product_value_nr, analyze_product_value_bs
 
 # 加载环境变量
 load_dotenv()
@@ -41,8 +42,10 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
         "价格趋势类型",
         "价格",
         "pcs",
-        "是否开发",
+        "经验判断是否开发",
         "原因",
+        "是否开发",
+        "商品潜力说明",
     ]
 
     # 只保留存在的列，防止 KeyError
@@ -101,10 +104,22 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
 
 if __name__ == '__main__':
     # 1. 加载并合并数据
-    file_path1 = 'input_file/2025-12-26/best-sellers-20251224_154540.xlsx'
-    file_path2 = 'input_file/2025-12-26/crawl-20251226-bsr.xlsx'
+    file_path1 = 'input_file/2026-01-04/best-sellers-20260104.xlsx'
+    file_path2 = 'input_file/2026-01-04/crawl-20260104-bsr.xlsx'
+    price_trend_file_path = 'input_file/2026-01-04/crawl-20260104-price-trend.json'
+    rank_name = 'bs'
     
     df = load_and_merge_data(file_path1, file_path2)
+    
+    # 如果标题中包含"photography"关键字，将该行排到所有数据之后
+    if '产品标题' in df.columns:
+        # 创建排序键：包含photography的为1（排后），不包含的为0（排前）
+        df['_sort_key'] = df['产品标题'].astype(str).str.contains('photography', case=False, na=False).astype(int)
+        # 按照排序键排序，然后删除临时列
+        df = df.sort_values('_sort_key', kind='stable').drop(columns='_sort_key')
+        # 重置索引
+        df = df.reset_index(drop=True)
+    
     print(df.head())
     
     # 保存中间结果
@@ -126,9 +141,9 @@ if __name__ == '__main__':
     
     title_theme = extract_themes_from_titles(titles, llm)
     df['主题'] = title_theme
+    # df['主题'] = [i for i in range(0,100)]
     
     # 3. 加载价格趋势数据
-    price_trend_file_path = 'input_file/2025-12-26/crawl-20251226-price-trend.json'
     price_trend_data = load_price_trend_data(price_trend_file_path)
     
     # 4. 初始化图片存储字典
@@ -143,8 +158,8 @@ if __name__ == '__main__':
         if i in [90]:
             print(i)
         i = i + 1
-        if i >5:
-            break
+        # if i >5:
+        #     break
         process_row_data(
             idx=idx,
             row=row,
@@ -157,10 +172,18 @@ if __name__ == '__main__':
     
     # 6. 准备输出路径和列顺序
     date_str = datetime.now().strftime("%Y%m%d")
-    output_path = f'./result/流量周期分析结果_{date_str}.xlsx'
+    output_dir = f'./result/{rank_name}'
+    os.makedirs(output_dir, exist_ok=True)
+    output_path = f'{output_dir}/流量周期分析结果_{date_str}.xlsx'
     
     # 6.1 根据ASIN生成商品链接
     df['商品链接'] = df['asin'].apply(lambda asin: f'https://www.amazon.com/dp/{asin}' if pd.notna(asin) else None)
+    
+    # 6.2 分析产品潜在价值（在插入图片之前）
+    print('开始分析产品潜在价值...')
+    # df = analyze_product_value_nr(df, sales_threshold=5)
+    df = analyze_product_value_bs(df)
+    print('产品潜在价值分析完成')
     
     columns_order = prepare_dataframe_columns(df)
     df = df[columns_order]

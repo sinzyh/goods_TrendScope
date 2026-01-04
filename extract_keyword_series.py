@@ -1140,7 +1140,10 @@ def extract_keyword_series(keyword_searches):
         now = datetime.now()
         current_year = now.year
         current_month = now.month
-        end_month_str = f'{current_year}-{current_month-1}'
+        if current_month != 1:
+            end_month_str = f'{current_year}-{current_month-1}'
+        else:
+            end_month_str = f'{current_year}-{current_month}'
 
         # 如果不足 3 年，全部保留
         first_year = int(months[0][:4])

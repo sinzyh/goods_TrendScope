@@ -91,7 +91,7 @@ def plot_keyword_search_trend_to_bytes(
 
 
 # ---------- 从 traffic_cycle_json 绘制所有关键词的趋势图（返回 BytesIO） ----------
-def plot_traffic_cycle_json_to_bytes(traffic_cycle_json: dict, figsize=(14, 5)) -> Optional[BytesIO]:
+def plot_traffic_cycle_json_to_bytes(traffic_cycle_json: dict, figsize=(14, 4)) -> Optional[BytesIO]:
     """
     根据 traffic_cycle_json 绘制所有关键词的搜索趋势图（仅使用近三年数据）
     
@@ -126,19 +126,6 @@ def plot_traffic_cycle_json_to_bytes(traffic_cycle_json: dict, figsize=(14, 5)) 
     if not data_list:
         return None
     
-    # 计算近三年的起始时间
-    now = datetime.now()
-    current_year = now.year
-    current_month = now.month
-    # 结束月份：当前月份的前一个月（如果当前是1月，则结束月份是上一年的12月）
-    if current_month > 1:
-        end_month_str = f'{current_year}-{current_month-1:02d}'
-    else:
-        end_month_str = f'{current_year-1}-12'
-    # 起始月份：三年前的1月（即当前年份-2年的1月）
-    start_year = current_year - 2
-    start_month_str = f"{start_year}-01"
-    
     # 创建图表
     fig, ax = plt.subplots(figsize=figsize)
     
@@ -162,15 +149,13 @@ def plot_traffic_cycle_json_to_bytes(traffic_cycle_json: dict, figsize=(14, 5)) 
             continue
         
         try:
-            # 过滤近三年数据
-            filtered_months = []
-            filtered_searches = []
-            
-            for i, month_str in enumerate(months):
-                # 如果月份字符串在近三年范围内，则保留
-                if month_str >= start_month_str and month_str <= end_month_str:
-                    filtered_months.append(month_str)
-                    filtered_searches.append(searches[i])
+            # 直接取最后36个月的数据（近三年 = 36个月）
+            if len(months) > 36:
+                filtered_months = months[-36:]
+                filtered_searches = searches[-36:]
+            else:
+                filtered_months = months
+                filtered_searches = searches
             
             if not filtered_months:
                 print(f"  警告: 关键词 {keyword} 在近三年范围内没有数据，跳过")
@@ -442,6 +427,15 @@ def plot_price_trend_to_bytes(price_trend: list, times: list, figsize=(10, 5)) -
     if start_idx is not None:
         segments.append((start_idx, len(valid_mask) - 1))
     
+    # 找到第一个和最后一个有效数据点（用于标注）
+    first_valid_idx = None
+    last_valid_idx = None
+    for i, is_valid in enumerate(valid_mask):
+        if is_valid:
+            if first_valid_idx is None:
+                first_valid_idx = i
+            last_valid_idx = i
+    
     # 绘制每个连续的有效数据段
     for start_idx, end_idx in segments:
         segment_times = filtered_times[start_idx:end_idx + 1]
@@ -450,6 +444,21 @@ def plot_price_trend_to_bytes(price_trend: list, times: list, figsize=(10, 5)) -
         # 绘制阶梯图（竖线和横线，不使用直接连接）
         # drawstyle='steps-post' 表示先画横线，然后在点之后画竖线改变值
         ax.plot(segment_times, segment_prices, drawstyle='steps-post', linewidth=1, color='red')
+    
+    # 在第一个和最后一个数据点处添加文本标注
+    if first_valid_idx is not None and last_valid_idx is not None:
+        first_time = filtered_times[first_valid_idx]
+        first_price = filtered_prices[first_valid_idx]
+        last_time = filtered_times[last_valid_idx]
+        last_price = filtered_prices[last_valid_idx]
+        
+        # 标注第一个数据点
+        ax.text(first_time, first_price, f'${first_price:.2f}', 
+                fontsize=8, ha='left', va='bottom')
+        
+        # 标注最后一个数据点
+        ax.text(last_time, last_price, f'${last_price:.2f}', 
+                fontsize=8, ha='left', va='bottom')
     
     # 设置标题和标签
     ax.set_title("价格趋势图", fontsize=12, fontweight='bold')
@@ -475,7 +484,7 @@ def plot_price_trend_to_bytes(price_trend: list, times: list, figsize=(10, 5)) -
         # 使用FixedLocator固定刻度位置，避免matplotlib自动添加额外刻度
         ax.yaxis.set_major_locator(FixedLocator(y_ticks))
     
-    # 设置x轴刻度，以8天为一个分界点进行标注（每月1, 8, 16, 23日）
+    # 设置x轴刻度
     if filtered_times:
         # 获取所有时间点
         unique_times = sorted(set(filtered_times))
@@ -483,40 +492,55 @@ def plot_price_trend_to_bytes(price_trend: list, times: list, figsize=(10, 5)) -
             min_time = unique_times[0]
             max_time = unique_times[-1]
             
-            # 生成所有需要标注的日期点（每月1, 8, 16, 23日）
-            tick_dates = []
-            # 从最小日期的月初开始
-            current_date = min_time.replace(day=1)
+            # 计算时间跨度（月份数）
+            # 计算两个日期之间的月份差
+            months_diff = (max_time.year - min_time.year) * 12 + (max_time.month - min_time.month)
             
-            while current_date <= max_time:
-                # 每月的1, 8, 16, 23日
-                for day in [1, 8, 16, 23]:
-                    try:
-                        tick_date = current_date.replace(day=day)
-                        # 只添加在数据范围内的日期
-                        if min_time <= tick_date <= max_time:
-                            tick_dates.append(tick_date)
-                    except ValueError:
-                        # 如果该月没有这一天（如2月没有30日），跳过
-                        pass
-                
-                # 移动到下一个月
-                if current_date.month == 12:
-                    current_date = current_date.replace(year=current_date.year + 1, month=1, day=1)
-                else:
-                    current_date = current_date.replace(month=current_date.month + 1, day=1)
-            
-            # 去重并排序
-            tick_dates = sorted(set(tick_dates))
-            
-            # 设置x轴刻度
-            if tick_dates:
+            # 如果时间跨度小于等于2个月，使用日期标注（年-月-日）
+            if months_diff <= 2:
+                # 按日期去重，每天只保留一个刻度点（使用每天的第一个时间点）
+                # 这样可以避免同一天有多个数据点时，x轴显示重复的日期标签
+                daily_times = {}
+                for dt in unique_times:
+                    date_key = dt.date()  # 只使用日期部分（不包含时间）
+                    if date_key not in daily_times:
+                        daily_times[date_key] = dt
+                tick_dates = sorted(daily_times.values())
                 ax.set_xticks(tick_dates)
-                # 设置x轴标签格式为 "MM-DD"（只显示月-日）
-                ax.set_xticklabels([dt.strftime("%m-%d") for dt in tick_dates], rotation=45, ha='right', fontsize=8)
+                # 设置x轴标签格式为 "YYYY-MM-DD"（年-月-日）
+                ax.set_xticklabels([dt.strftime("%Y-%m-%d") for dt in tick_dates], rotation=45, ha='right', fontsize=8)
             else:
-                # 如果没有生成标注点，使用默认的自动标注
-                ax.tick_params(axis='x', rotation=45)
+                # 如果时间跨度大于2个月，使用月份标注（年-月）
+                # 生成所有需要标注的月份点（每月1日）
+                tick_dates = []
+                # 从最小日期的月初开始
+                current_date = min_time.replace(day=1)
+                
+                while current_date <= max_time:
+                    # 只添加在数据范围内的日期
+                    if min_time <= current_date <= max_time:
+                        tick_dates.append(current_date)
+                    
+                    # 移动到下一个月
+                    if current_date.month == 12:
+                        current_date = current_date.replace(year=current_date.year + 1, month=1, day=1)
+                    else:
+                        current_date = current_date.replace(month=current_date.month + 1, day=1)
+                
+                # 去重并排序
+                tick_dates = sorted(set(tick_dates))
+                
+                # 设置x轴刻度
+                if tick_dates:
+                    ax.set_xticks(tick_dates)
+                    # 设置x轴标签格式为 "YYYY-MM"（只显示年-月）
+                    ax.set_xticklabels([dt.strftime("%Y-%m") for dt in tick_dates], rotation=45, ha='right', fontsize=8)
+                else:
+                    # 如果没有生成标注点，使用默认的自动标注
+                    ax.tick_params(axis='x', rotation=45)
+        else:
+            # 如果没有时间点，使用默认的自动标注
+            ax.tick_params(axis='x', rotation=45)
     
     # 设置纵坐标格式：显示美元符号，不保留小数
     def dollar_formatter(x, pos):

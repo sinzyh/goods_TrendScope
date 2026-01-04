@@ -34,7 +34,7 @@ def detect_low_flow_months(
         if not values:
             continue
 
-        months = pd.date_range(start=start_time, end=end_time, freq="MS")
+        months = pd.date_range(start=start_time, periods=len(values), freq="MS")
         series = pd.Series(values, index=months)
 
         df = series.to_frame("value")

@@ -85,24 +85,12 @@ def extract_themes_from_titles(titles: list, llm: ChatOpenAI) -> list:
 
     messages = prompt.format_messages(titles=titles)
     # resp = llm.invoke(messages)
-    # return resp.content
-    
+    # result = json.loads(resp.content)
+    # print(result)
+    # return result
+    #
     # 模拟数据（实际使用时取消注释上面的代码）
-    return ["Grinch", "New Year", "Demon Hunters", "New Year", "New Year", "New Year", "New Year", "New Year",
-            "New Year", "New Year", "Christmas", "New Year", "New Year", "New Year", "New Year", "Christmas", 
-            "Christmas", "Birthday", "New Year", "Gingerbread House", "Christmas", "Christmas", "Winter Wonderland", 
-            "Christmas", "Christmas", "New Year", "Christmas", "New Year", "Winter Wonderland", "Black and Gold", 
-            "Christmas", "Christmas", "New Year", "Santa Claus", "Christmas", "Christmas Tree", "Monster", "New Year", 
-            "North Pole", "New Year", "New Year", "New Year", "New Year", "New Year", "Mario", "Half Birthday", 
-            "Cheetah Print", "Apres Ski", "Race Car", "Christmas", "Christmas", "Winter Wonderland", "Christmas", 
-            "New Year", "New Year", "Christmas", "Christmas", "Christmas", "New Year", "New Year", "New Year", 
-            "Christmas", "Winter Wonderland", "Christmas", "Valentines Day", "New Year", "Christmas", "Candy Cane", 
-            "Winter Forest", "Winter Wonderland", "Half Birthday", "New Year", "North Pole", "New Year", "Showgirl", 
-            "Stranger Things", "Tet", "Christmas", "New Year", "Christmas", "New Year", "Christmas", "Oh Twodles", 
-            "Christmas", "New Year", "25th Birthday", "Gingerbread House", "New Year", "Coffee", "Christmas", 
-            "Christmas", "New Year", "Christmas", "New Year", "Jesus", "New Year", "Winter Wonderland", "New Year", 
-            "New Year"]
-
+    return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
 
 def load_price_trend_data(file_path: str) -> Dict:
     """加载价格趋势JSON文件"""
@@ -318,24 +306,24 @@ def process_row_data(
     df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
     
     if pcs is None:
-        df.loc[idx, '是否开发'] = '待定'
+        df.loc[idx, '经验判断是否开发'] = '待定'
         df.loc[idx, '原因'] = reason
         return
     
     if price is None:
-        df.loc[idx, '是否开发'] = '待定'
+        df.loc[idx, '经验判断是否开发'] = '待定'
         df.loc[idx, '原因'] = '上月无参照价格'
         return
     
     if result:
         can_dev, timing_reason = can_develop(traffic_cycle)
         if result and can_dev:
-            df.loc[idx, '是否开发'] = '是'
+            df.loc[idx, '经验判断是否开发'] = '是'
             df.loc[idx, '原因'] = reason + '；' + timing_reason
         else:
-            df.loc[idx, '是否开发'] = '否'
+            df.loc[idx, '经验判断是否开发'] = '否'
             df.loc[idx, '原因'] = reason + '；' + timing_reason
     else:
-        df.loc[idx, '是否开发'] = '否'
+        df.loc[idx, '经验判断是否开发'] = '否'
         df.loc[idx, '原因'] = reason
 

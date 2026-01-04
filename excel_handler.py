@@ -285,18 +285,25 @@ def insert_product_images(output_path: str):
                 link_col_idx = link_col_idx + 1
                 
                 # 立即清除新插入列的所有单元格值和超链接（防止复制了原列的内容）
+                # 注意：insert_cols可能会复制原列内容，必须立即清除
                 for row in range(2, ws.max_row + 1):
                     cell = ws.cell(row, img_col_idx)
+                    # 强制清除值（无论是什么值都清除，包括空字符串）
                     cell.value = None
-                    cell.hyperlink = None  # 清除超链接
+                    # 清除超链接
+                    if cell.hyperlink is not None:
+                        cell.hyperlink = None
 
             col_letter = get_column_letter(img_col_idx)
             
             # 清除整个"图片"列的所有单元格值和超链接（确保没有URL文本和超链接）
             for row in range(2, ws.max_row + 1):
                 cell = ws.cell(row, img_col_idx)
+                # 强制清除值（无论是什么值都清除）
                 cell.value = None
-                cell.hyperlink = None  # 清除超链接
+                # 清除超链接
+                if cell.hyperlink is not None:
+                    cell.hyperlink = None
             
             inserted_img_count = 0
             session = requests.Session()
@@ -327,16 +334,18 @@ def insert_product_images(output_path: str):
                         current_height = ws.row_dimensions[row].height
                         if current_height is None or current_height < 80:
                             ws.row_dimensions[row].height = 80
-                        
-                        # 获取单元格对象
-                        cell = ws.cell(row, img_col_idx)
-                        
-                        # 清除单元格的值和超链接（确保没有URL文本和超链接）
-                        cell.value = None
-                        cell.hyperlink = None
-                        
+
                         # 直接锚定到对应单元格
                         ws.add_image(img, f"{col_letter}{row}")
+                        
+                        # 插入图片后，立即清除单元格的值和超链接（确保没有URL文本和超链接）
+                        cell = ws.cell(row, img_col_idx)
+                        # 强制清除值（无论是什么值都清除）
+                        cell.value = None
+                        # 清除超链接
+                        if cell.hyperlink is not None:
+                            cell.hyperlink = None
+                        
                         inserted_img_count += 1
                         success = True
                         if attempt > 0:
@@ -354,8 +363,40 @@ def insert_product_images(output_path: str):
                             print(f"  ✗ 插入图片失败（已重试{max_retries}次）: Excel行{row}, url={url}, 错误: {e}")
                             break
 
+            # 保存前，再次清除图片列所有单元格的值和超链接（确保没有URL残留）
+            for row in range(2, ws.max_row + 1):
+                cell = ws.cell(row, img_col_idx)
+                # 强制清除值（无论是什么值都清除）
+                cell.value = None
+                # 清除超链接
+                if cell.hyperlink is not None:
+                    cell.hyperlink = None
+
             wb.save(output_path)
             print(f'成功插入 {inserted_img_count} 张产品图片到 {output_path}')
+            
+            # 保存后重新加载文件，最后一次清除图片列的所有值和超链接（彻底解决URL残留问题）
+            wb_final = load_workbook(output_path)
+            ws_final = wb_final.active
+            
+            # 重新找到图片列的位置
+            img_col_idx_final = None
+            for col_idx, cell in enumerate(ws_final[header_row], 1):
+                if cell.value == "图片":
+                    img_col_idx_final = col_idx
+                    break
+            
+            if img_col_idx_final:
+                for row in range(2, ws_final.max_row + 1):
+                    cell = ws_final.cell(row, img_col_idx_final)
+                    # 强制清除值（无论是什么值都清除，包括URL字符串）
+                    cell.value = None
+                    # 清除超链接
+                    if cell.hyperlink is not None:
+                        cell.hyperlink = None
+                
+                wb_final.save(output_path)
+                print(f'✅ 已彻底清除图片列中的所有URL文本和超链接')
 
             # 调整指定列的列宽
             # 产品标题、核心词周期、核心词周期图列加宽
