@@ -1,14 +1,26 @@
-from typing import Dict, Tuple, Union, Mapping
+from typing import Dict, Tuple, Union, Mapping, Literal
 
 
 # 单个数量对应的价格阈值类型：
 # - float: 普通阈值
 # - dict: 特殊规则（例如 60pcs 里区分 9inch / 7inch）
-PriceRuleValue = Union[float, Dict[str, float]]
+# - Literal["banners_rule"]: 特殊的 banners 规则标记（基于销售量和价格趋势，而非价格阈值）
+PriceRuleValue = Union[float, Dict[str, float], Literal["banners_rule"]]
 PriceRules = Dict[int, PriceRuleValue]
 
 
 # Toys&Games / Plates 类目的价格规则（从「根据条件过滤BS文件.py」中抽离）
+# 输出40pcs套装价格≥$16.99
+# 输出48pcs套装价格≥$11.99
+# 输出60pcs套装，9inch价格≥$14.99,7inch价格≥$11.99
+# 输出96pcs套装价格≥$15.99
+# 输出100pcs套装价格≥$16.99
+# 输出150pcs套装价格≥$18.99
+# 输出162pcs套装价格≥$18.99
+# 输出168pcs套装价格≥$25.99
+# 输出200pcs套装价格≥$21.99
+# 输出300pcs套装价格≥$24.99
+# 输出350pcs套装价格≥$26.99
 TOYS_GAMES_PLATES_RULES: PriceRules = {
     40: 16.99,
     48: 11.99,
@@ -27,12 +39,31 @@ TOYS_GAMES_PLATES_RULES: PriceRules = {
 }
 
 
+# Toys&Games / Banners 类目的规则
+# 规则条件：销售量≥50 且 价格趋势上升
+# 
+# 注意：这不是基于价格阈值的规则，而是基于销售量和价格趋势的特殊规则。
+# 与 Plates 类目不同，Banners 类目不使用价格阈值，而是使用以下条件：
+#   - 销售量（上月销量）必须 ≥ 50
+#   - 价格趋势类型必须为 "上升"
+# 
+# 此规则的实际应用逻辑在 data_processor.py 的 process_row_data 函数中实现。
+# 使用特殊的 "banners_rule" 标记来表示这种规则类型，便于系统识别。
+TOYS_GAMES_BANNERS_RULES: PriceRules = {
+    # 使用 0 作为特殊键，表示这是 banners 规则（不依赖 pcs 数量）
+    # 实际应用中，该规则会通过 data_processor.py 中的特殊逻辑进行处理
+    0: "banners_rule",
+}
+
 # 通过 (main_menu, sub_menu) 组合来选择规则。
 # 这里按照类目精确绑定，例如：
 #   main_menu='Toys&Games', sub_menu='Plates'
 # 时会使用 TOYS_GAMES_PLATES_RULES 这套规则。
+#   main_menu='Toys&Games', sub_menu='Banners'
+# 时会使用 TOYS_GAMES_BANNERS_RULES 这套规则。
 PRICE_RULES_BY_MENU: Dict[Tuple[str, str], PriceRules] = {
     ("toys&games", "plates"): TOYS_GAMES_PLATES_RULES,
+    ("toys&games", "banners"): TOYS_GAMES_BANNERS_RULES,
 }
 
 

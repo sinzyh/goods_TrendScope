@@ -42,10 +42,9 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
         "价格趋势类型",
         "价格",
         "pcs",
-        "经验判断是否开发",
-        "原因",
-        "是否开发",
-        "商品潜力说明",
+        "规则层建议",
+        "开发结论",
+        "开发结论说明",
     ]
 
     # 只保留存在的列，防止 KeyError
@@ -103,10 +102,14 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
 
 
 if __name__ == '__main__':
+    # 配置参数
+    masterKind = 'toys&games'  # 主类目
+    slaverKind = 'banners'      # 子类目，可选值: 'plates', 'banners'
+    
     # 1. 加载并合并数据
-    file_path1 = 'input_file/2026-01-04/best-sellers-20260104.xlsx'
-    file_path2 = 'input_file/2026-01-04/crawl-20260104-bsr.xlsx'
-    price_trend_file_path = 'input_file/2026-01-04/crawl-20260104-price-trend.json'
+    file_path1 = 'input_file/2026-01-07/best-sellers-20260107.xlsx'
+    file_path2 = 'input_file/2026-01-07/crawl-20260107-bsr.xlsx'
+    price_trend_file_path = 'input_file/2026-01-07/crawl-20260107-price-trend.json'
     rank_name = 'bs'
     
     df = load_and_merge_data(file_path1, file_path2)
@@ -158,7 +161,7 @@ if __name__ == '__main__':
         if i in [90]:
             print(i)
         i = i + 1
-        # if i >5:
+        # if i >30:
         #     break
         process_row_data(
             idx=idx,
@@ -167,7 +170,9 @@ if __name__ == '__main__':
             price_trend_data=price_trend_data,
             traffic_cycle_images=traffic_cycle_images,
             sales_trend_images=sales_trend_images,
-            price_trend_images=price_trend_images
+            price_trend_images=price_trend_images,
+            masterKind=masterKind,
+            slaverKind=slaverKind
         )
     
     # 6. 准备输出路径和列顺序
@@ -182,7 +187,7 @@ if __name__ == '__main__':
     # 6.2 分析产品潜在价值（在插入图片之前）
     print('开始分析产品潜在价值...')
     # df = analyze_product_value_nr(df, sales_threshold=5)
-    df = analyze_product_value_bs(df)
+    df = analyze_product_value_bs(data=df, masterKind=masterKind, slaverKind=slaverKind)
     print('产品潜在价值分析完成')
     
     columns_order = prepare_dataframe_columns(df)

@@ -84,13 +84,26 @@ def extract_themes_from_titles(titles: list, llm: ChatOpenAI) -> list:
     ])
 
     messages = prompt.format_messages(titles=titles)
-    # resp = llm.invoke(messages)
-    # result = json.loads(resp.content)
-    # print(result)
-    # return result
+    resp = llm.invoke(messages)
+    result = json.loads(resp.content)
+    print(result)
+    return result
     #
     # 模拟数据（实际使用时取消注释上面的代码）
-    return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
+    # return [i for i in range(0,96)]
+    # return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
+    # ['Hip Hop', 'Alphabet', 'Rainbow', 'Pastel', 'Spider', 'New Year', 'First Birthday', 'Pink', 'Gold', 'New Year',
+    #  'Black', 'Black and Gold', 'Baby Girl', 'Burgundy', 'Safari Animals', 'Gold', 'First Birthday', 'Graduation',
+    #  'First Birthday', 'Construction', 'Demon Movie Hunters', 'Rainbow', 'Pink', 'Harry Potter', 'Rainbow', 'Pastel',
+    #  'Gold', 'Spidey', 'Pink', '50th Birthday', 'Video Game', 'Black and Gold', 'Alphabet', 'Dog Paw', 'Iridescent',
+    #  'Pastel', 'Wonderland Tea Party', 'New Year', 'Baby Girl', 'Football', 'Pixel Game', 'Gold', 'Princess', 'Black',
+    #  'Nautical', 'Black and Gold', '25th Birthday', 'Mickey', 'Butterflies', 'Red', 'First Birthday', 'Rainbow',
+    #  'Rustic', 'Rainbow', 'Racing', 'Black', 'Colorful', 'Cinco de Mayo', 'Pixel', 'Pastel', '70th Birthday',
+    #  'Welcome Back', 'Valentines', 'Stars', 'Sweet 16', 'Sweet 16', 'First Birthday', 'New Years', 'Candy Hearts',
+    #  "It's a Boy", 'Cinco de Mayo', 'Sweet 16', '18th Birthday', 'Alphabet', 'Gold', 'Dog', 'Dog', 'New Year',
+    #  'Retirement', 'Spidey', 'Valentines', 'Basketball', 'Brown', 'Tropical', 'Coquette', 'Gold', 'Cat', 'Pig',
+    #  'Sweet 16', 'Baby Girl', 'Bills', '13th Birthday', 'Red', 'Winter Wonderland', '13th Birthday', 'Neon']
+
 
 def load_price_trend_data(file_path: str) -> Dict:
     """加载价格趋势JSON文件"""
@@ -125,7 +138,9 @@ def process_row_data(
     price_trend_data: Dict,
     traffic_cycle_images: Dict[int, Optional[bytes]],
     sales_trend_images: Dict[int, Optional[bytes]],
-    price_trend_images: Dict[int, Optional[bytes]]
+    price_trend_images: Dict[int, Optional[bytes]],
+    masterKind: str = 'toys&games',
+    slaverKind: str = 'plates'
 ):
     """处理单行数据"""
     title = row['产品标题']
@@ -133,6 +148,7 @@ def process_row_data(
     traffic_cycle_json = row['核心词周期数据']
     sales_json = row['销量数据']
     price = row['价格']
+    trend_result = None
 
     # 解析JSON数据
     if isinstance(traffic_cycle_json, str):
@@ -294,36 +310,60 @@ def process_row_data(
         )
 
     df.loc[idx, '核心词周期'] = str(core_word_cell_text)
-    
-    # 根据规则判断是否开发
-    if sales is None or price is None:
-        result = False
-        reason = '销量或价格是空'
-        pcs = None
-    else:
-        result, reason, pcs = pass_rule(main_menu='Toys&Games', sub_menu='Plates', sales=sales, price=price, title=title)
-    
-    df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
-    
-    if pcs is None:
-        df.loc[idx, '经验判断是否开发'] = '待定'
-        df.loc[idx, '原因'] = reason
-        return
-    
-    if price is None:
-        df.loc[idx, '经验判断是否开发'] = '待定'
-        df.loc[idx, '原因'] = '上月无参照价格'
-        return
-    
-    if result:
-        can_dev, timing_reason = can_develop(traffic_cycle)
-        if result and can_dev:
-            df.loc[idx, '经验判断是否开发'] = '是'
-            df.loc[idx, '原因'] = reason + '；' + timing_reason
+
+    if masterKind == 'toys&games' and slaverKind == 'plates':
+        # 根据规则判断是否开发
+        if sales is None or price is None:
+            result = False
+            reason = '销量或价格是空'
+            pcs = None
+        else:
+            result, reason, pcs = pass_rule(main_menu='Toys&Games', sub_menu='Plates', sales=sales, price=price, title=title)
+
+        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+
+        if pcs is None:
+            df.loc[idx, '经验判断是否开发'] = '待定'
+            df.loc[idx, '规则层建议'] = reason
+            return
+
+        if price is None:
+            df.loc[idx, '经验判断是否开发'] = '待定'
+            df.loc[idx, '规则层建议'] = '上月无参照价格'
+            return
+
+        if result:
+            can_dev, timing_reason = can_develop(traffic_cycle)
+            if result and can_dev:
+                df.loc[idx, '经验判断是否开发'] = '是'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
         else:
             df.loc[idx, '经验判断是否开发'] = '否'
-            df.loc[idx, '原因'] = reason + '；' + timing_reason
-    else:
-        df.loc[idx, '经验判断是否开发'] = '否'
-        df.loc[idx, '原因'] = reason
+            df.loc[idx, '规则层建议'] = reason
+    elif masterKind == 'toys&games' and slaverKind == 'banners':
+        # 根据规则判断是否开发
 
+        result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                            title=title,price_trend=trend_result)
+
+        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+
+
+        if sales is None or trend_result is None:
+            df.loc[idx, '经验判断是否开发'] = '待定'
+            df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+            return
+        can_dev, timing_reason = can_develop(traffic_cycle)
+        if result:
+            if result and can_dev:
+                df.loc[idx, '经验判断是否开发'] = '是'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+        else:
+            df.loc[idx, '经验判断是否开发'] = '否'
+            df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
