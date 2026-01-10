@@ -84,13 +84,13 @@ def extract_themes_from_titles(titles: list, llm: ChatOpenAI) -> list:
     ])
 
     messages = prompt.format_messages(titles=titles)
-    resp = llm.invoke(messages)
-    result = json.loads(resp.content)
-    print(result)
-    return result
+    # resp = llm.invoke(messages)
+    # result = json.loads(resp.content)
+    # print(result)
+    # return result
     #
     # 模拟数据（实际使用时取消注释上面的代码）
-    # return [i for i in range(0,96)]
+    return [i for i in range(0,100)]
     # return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
     # ['Hip Hop', 'Alphabet', 'Rainbow', 'Pastel', 'Spider', 'New Year', 'First Birthday', 'Pink', 'Gold', 'New Year',
     #  'Black', 'Black and Gold', 'Baby Girl', 'Burgundy', 'Safari Animals', 'Gold', 'First Birthday', 'Graduation',
@@ -351,6 +351,29 @@ def process_row_data(
 
         df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
 
+
+        if sales is None or trend_result is None:
+            df.loc[idx, '经验判断是否开发'] = '待定'
+            df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+            return
+        can_dev, timing_reason = can_develop(traffic_cycle)
+        if result:
+            if result and can_dev:
+                df.loc[idx, '经验判断是否开发'] = '是'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+        else:
+            df.loc[idx, '经验判断是否开发'] = '否'
+            df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+    elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+        # 根据规则判断是否开发
+
+        result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                        title=title, price_trend=trend_result)
+
+        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
 
         if sales is None or trend_result is None:
             df.loc[idx, '经验判断是否开发'] = '待定'

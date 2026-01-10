@@ -294,5 +294,5 @@ def split_excel_by_description_with_images(
 
 
 if __name__ == '__main__':
-    split_excel_by_description_with_images(input_path='result/bs/流量周期分析结果_20260109.xlsx',
-                                           output_path='result/bs/潜在价值结果/分类后_潜在价值_20260109.xlsx')
+    split_excel_by_description_with_images(input_path='result/bs/流量周期分析结果_20260110.xlsx',
+                                           output_path='result/bs/潜在价值结果/分类后_潜在价值_20260110.xlsx')

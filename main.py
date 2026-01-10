@@ -104,12 +104,12 @@ def prepare_dataframe_columns(df: pd.DataFrame) -> list:
 if __name__ == '__main__':
     # 配置参数
     masterKind = 'toys&games'  # 主类目
-    slaverKind = 'banners'      # 子类目，可选值: 'plates', 'banners'
+    slaverKind = 'centerpieces'      # 子类目，可选值: 'plates', 'banners', centerpieces
     
     # 1. 加载并合并数据
-    file_path1 = 'input_file/2026-01-07/best-sellers-20260107.xlsx'
-    file_path2 = 'input_file/2026-01-07/crawl-20260107-bsr.xlsx'
-    price_trend_file_path = 'input_file/2026-01-07/crawl-20260107-price-trend.json'
+    file_path1 = 'input_file/2026-01-09/best-sellers-20260109.xlsx'
+    file_path2 = 'input_file/2026-01-09/crawl-20260109-bsr.xlsx'
+    price_trend_file_path = 'input_file/2026-01-09/crawl-20260109-price-trend.json'
     rank_name = 'bs'
     
     df = load_and_merge_data(file_path1, file_path2)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         if i in [90]:
             print(i)
         i = i + 1
-        # if i >30:
+        # if i >12:
         #     break
         process_row_data(
             idx=idx,

@@ -2,6 +2,8 @@ from typing import Tuple, Union, Optional
 
 import re
 
+from sqlalchemy.util.langhelpers import repr_tuple_names
+
 from price_rules import get_price_rules
 
 
@@ -48,7 +50,7 @@ def parse_price(value):
     return None
 
 
-def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, price = None, title: str = None, price_trend: str = None) -> \
+def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, price:str = None, title: str = None, price_trend: str = None) -> \
         Union[None, Tuple[bool, str, None], Tuple[bool, str, int], bool, Tuple[bool, str, Optional[int]], Tuple[
             bool, None, None]]:
     """
@@ -145,6 +147,31 @@ def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, pr
 
         # 普通规则：只比较价格是否达到阈值
         if sales >= 50 and price_trend == '上升':
+            norm_title = normalize_title(str(title or ""))
+            pcs = extract_pcs(norm_title)
+            if pcs is None:
+                reason = '通过规则校验，pcs解析失败'
+            else:
+                reason = f'通过规则校验'
+            return True, reason, pcs
+        return False, '没有通过规则校验', None
+    elif main_menu == 'toys&games' and sub_menu == 'centerpieces':
+        # price>=9.99 sales>=50 price_trend上升
+        # 销量≥50 and 价格趋势上升
+        if price is None:
+            reason = '没有价格'
+            return False, reason, None
+
+        if sales is None:
+            reason = '没有销量'
+            return False, reason, None
+
+        if price_trend is None:
+            reason = '没有价格趋势'
+            return False, reason, None
+
+        # 普通规则：只比较价格是否达到阈值
+        if parse_price(price)>=9.99 and sales >= 50 and price_trend == '上升':
             norm_title = normalize_title(str(title or ""))
             pcs = extract_pcs(norm_title)
             if pcs is None:
