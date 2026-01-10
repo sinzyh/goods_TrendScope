@@ -42,10 +42,16 @@ def can_develop(
         # 判断倾向
         if dist_prev <= dist_next:
             # 倾向上一年
+            # 目前是开发完成月份强制小于流量周期起始月份；
+            # 需要修改为开发完成月份小于流量周期起始的上半月份，例如流量周期是[3,9]，则开发完成月份只需要小于6月即可。
             if T_ready <= prev_start:
                 gap = prev_start - T_ready
                 can_hit.append(
                     f"可赶上今年 {start}-{end} 月流量周期（提前 {gap} 个月完成开发）"
+                )
+            elif T_ready <= prev_start + (end - start)/2:
+                can_hit.append(
+                    f'可赶上今年 {start}-{end} 月流量周期（可以赶上后半段{T_ready}-{end}流量周期）'
                 )
             else:
                 cannot_hit.append(
@@ -57,6 +63,10 @@ def can_develop(
                 gap = next_start - T_ready
                 can_hit.append(
                     f"可赶上明年 {start}-{end} 月流量周期（提前 {gap} 个月完成开发）"
+                )
+            elif T_ready <= next_start + (end - start)/2:
+                can_hit.append(
+                    f'可赶上明年 {start}-{end} 月流量周期（可以赶上后半段{T_ready%12}-{end}流量周期）'
                 )
             else:
                 cannot_hit.append(
@@ -80,4 +90,4 @@ def can_develop(
 
 
 if __name__ == '__main__':
-    print(can_develop([[5,6],[10,11],],))
+    print(can_develop([[11,12],],))
