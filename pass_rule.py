@@ -50,7 +50,10 @@ def parse_price(value):
     return None
 
 
-def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, price:str = None, title: str = None, price_trend: str = None) -> \
+def pass_rule(main_menu: str = None, sub_menu: str = None,
+              sales: int = None, price:str = None,
+              title: str = None, price_trend: str = None,
+              material: str = None, ) -> \
         Union[None, Tuple[bool, str, None], Tuple[bool, str, int], bool, Tuple[bool, str, Optional[int]], Tuple[
             bool, None, None]]:
     """
@@ -157,7 +160,6 @@ def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, pr
         return False, '没有通过规则校验', None
     elif main_menu == 'toys&games' and sub_menu == 'centerpieces':
         # price>=9.99 sales>=50 price_trend上升
-        # 销量≥50 and 价格趋势上升
         if price is None:
             reason = '没有价格'
             return False, reason, None
@@ -172,6 +174,34 @@ def pass_rule(main_menu: str = None, sub_menu: str = None, sales: int = None, pr
 
         # 普通规则：只比较价格是否达到阈值
         if parse_price(price)>=9.99 and sales >= 50 and price_trend == '上升':
+            norm_title = normalize_title(str(title or ""))
+            pcs = extract_pcs(norm_title)
+            if pcs is None:
+                reason = '通过规则校验，pcs解析失败'
+            else:
+                reason = f'通过规则校验'
+            return True, reason, pcs
+        return False, '没有通过规则校验', None
+    elif main_menu == 'toys&games' and sub_menu == 'cupcake stands':
+        # 材质为纸质，price>=9.99 sales>=50 price_trend上升
+        # Cardboard Paper
+        if material is None:
+            reason = '没有材质'
+            return False, reason, None
+        if price is None:
+            reason = '没有价格'
+            return False, reason, None
+
+        if sales is None:
+            reason = '没有销量'
+            return False, reason, None
+
+        if price_trend is None:
+            reason = '没有价格趋势'
+            return False, reason, None
+
+        if (('cardboard' in material.lower().strip() or 'paper' not in material.lower().strip())
+                and parse_price(price)>=9.99 and sales >= 50 and price_trend == '上升'):
             norm_title = normalize_title(str(title or ""))
             pcs = extract_pcs(norm_title)
             if pcs is None:

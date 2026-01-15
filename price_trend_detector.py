@@ -234,6 +234,7 @@ def classify_price_trend(
     high_q = np.percentile(prices, quantile_level * 100)
     low_q = np.percentile(prices, (1 - quantile_level) * 100)
 
+    first = recent_prices[0]
     latest = recent_prices[-1]
 
     high_position = latest >= 0.8 * high_q
@@ -247,32 +248,64 @@ def classify_price_trend(
 
     # ---------- 6. 波动 ----------
     volatility = np.std(recent_prices) / (np.mean(recent_prices) + 1e-9)
-    vol_ok = volatility < vol_threshold
-    vol_ok = True
     # ---------- 7. 末尾确认 ----------
     mean_recent = np.mean(recent_prices)
     end_up = latest > mean_recent
     end_down = latest < mean_recent
 
     # ---------- 8. 分类 ----------
-    if has_trend and trend_dir == "increasing" and vol_ok and end_up and high_position:
-        label = "上升"
+    # if has_trend and trend_dir == "increasing" and end_up:
+    #     label = "上升"
+    #
+    # elif has_trend and trend_dir == "decreasing" and end_down:
+    #     label = "下降"
+    #
+    # elif volatility >= vol_threshold:
+    #     label = "波动"
+    #
+    # else:
+    #     label = "平稳"
 
-    elif has_trend and trend_dir == "decreasing" and vol_ok and end_down and low_position:
-        label = "下降"
-
-    elif volatility >= vol_threshold:
-        label = "波动"
-
+    if has_trend:
+        if trend_dir == 'increasing':
+            label = '上升'
+            if latest>first:
+                label = '上升'
+            else:
+                if volatility >= 0.04:
+                    label = '波动'
+                elif first == latest:
+                    label = '平稳'
+                else:
+                    label = '未知'
+        elif trend_dir == 'decreasing':
+            label = '下降'
+            if latest<first:
+                label = '下降'
+            else:
+                if volatility >= 0.05:
+                    label = '波动'
+                elif first == latest:
+                    label = '平稳'
+                else:
+                    label = '未知'
+        else:
+            if volatility >= 0.05:
+                label = '波动'
+            else:
+                label = '平稳'
     else:
-        label = "平稳"
-
+        if volatility >= 0.05:
+            label = '波动'
+        elif first == latest:
+            label = '平稳'
+        else:
+            label = '未知'
     detail = {
         "latest_price": latest,
         "high_quantile": high_q,
         "low_quantile": low_q,
         "volatility": volatility,
-        "vol_ok": vol_ok,
         "mk_trend": mk_result.trend,
         "mk_p": mk_result.p,
         "end_up": end_up,

@@ -5,6 +5,7 @@ from typing import List, Tuple
 
 def can_develop(
     traffic_cycles: List[List[int]],
+    flow_type: str,
     prepare_months: int = 3,
     now: datetime | None = None
 ) -> Tuple[bool, str]:
@@ -14,10 +15,14 @@ def can_develop(
     返回:
         (overall_can_develop, reason)
     """
+    if '全年' in flow_type or '季节' in flow_type:
+        return True, "可以开发，可赶上流量周期"
 
     if not traffic_cycles:
         return False, "未识别到流量周期"
 
+    # 下面全是带有强周期的商品
+    # 对于强周期商品，当前月份+3一定要下<=流量的起始周期
     if now is None:
         now = datetime.now()
 
@@ -49,10 +54,10 @@ def can_develop(
                 can_hit.append(
                     f"可赶上今年 {start}-{end} 月流量周期（提前 {gap} 个月完成开发）"
                 )
-            elif T_ready <= prev_start + (end - start)/2:
-                can_hit.append(
-                    f'可赶上今年 {start}-{end} 月流量周期（可以赶上后半段{T_ready}-{end}流量周期）'
-                )
+            # elif T_ready <= prev_start + (end - start)/2:
+            #     can_hit.append(
+            #         f'可赶上今年 {start}-{end} 月流量周期（可以赶上后半段{T_ready}-{end}流量周期）'
+            #     )
             else:
                 cannot_hit.append(
                     f"无法赶上今年 {start}-{end} 月流量周期（开发完成时间已晚于周期开始）"
@@ -64,10 +69,10 @@ def can_develop(
                 can_hit.append(
                     f"可赶上明年 {start}-{end} 月流量周期（提前 {gap} 个月完成开发）"
                 )
-            elif T_ready <= next_start + (end - start)/2:
-                can_hit.append(
-                    f'可赶上明年 {start}-{end} 月流量周期（可以赶上后半段{T_ready%12}-{end}流量周期）'
-                )
+            # elif T_ready <= next_start + (end - start)/2:
+            #     can_hit.append(
+            #         f'可赶上明年 {start}-{end} 月流量周期（可以赶上后半段{T_ready%12}-{end}流量周期）'
+            #     )
             else:
                 cannot_hit.append(
                     f"无法赶上明年 {start}-{end} 月流量周期（开发完成时间过晚）"

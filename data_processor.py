@@ -92,17 +92,19 @@ def extract_themes_from_titles(titles: list, llm: ChatOpenAI) -> list:
     # 模拟数据（实际使用时取消注释上面的代码）
     return [i for i in range(0,100)]
     # return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
-    # ['Hip Hop', 'Alphabet', 'Rainbow', 'Pastel', 'Spider', 'New Year', 'First Birthday', 'Pink', 'Gold', 'New Year',
-    #  'Black', 'Black and Gold', 'Baby Girl', 'Burgundy', 'Safari Animals', 'Gold', 'First Birthday', 'Graduation',
-    #  'First Birthday', 'Construction', 'Demon Movie Hunters', 'Rainbow', 'Pink', 'Harry Potter', 'Rainbow', 'Pastel',
-    #  'Gold', 'Spidey', 'Pink', '50th Birthday', 'Video Game', 'Black and Gold', 'Alphabet', 'Dog Paw', 'Iridescent',
-    #  'Pastel', 'Wonderland Tea Party', 'New Year', 'Baby Girl', 'Football', 'Pixel Game', 'Gold', 'Princess', 'Black',
-    #  'Nautical', 'Black and Gold', '25th Birthday', 'Mickey', 'Butterflies', 'Red', 'First Birthday', 'Rainbow',
-    #  'Rustic', 'Rainbow', 'Racing', 'Black', 'Colorful', 'Cinco de Mayo', 'Pixel', 'Pastel', '70th Birthday',
-    #  'Welcome Back', 'Valentines', 'Stars', 'Sweet 16', 'Sweet 16', 'First Birthday', 'New Years', 'Candy Hearts',
-    #  "It's a Boy", 'Cinco de Mayo', 'Sweet 16', '18th Birthday', 'Alphabet', 'Gold', 'Dog', 'Dog', 'New Year',
-    #  'Retirement', 'Spidey', 'Valentines', 'Basketball', 'Brown', 'Tropical', 'Coquette', 'Gold', 'Cat', 'Pig',
-    #  'Sweet 16', 'Baby Girl', 'Bills', '13th Birthday', 'Red', 'Winter Wonderland', '13th Birthday', 'Neon']
+    # return ['Demon Movie Hunters', 'Birthday', 'Birthday', 'K Pop Demon', 'Football', 'Race Car', '50th Birthday',
+    #  '69th Birthday', '80s', 'Birthday', 'Mouse', 'Winter', 'Race Car', 'Teddy Bear', 'Silly Goose', 'Chinese New Year',
+    #  'Race Car', 'Stitch', 'Hero', 'Pixel', 'Retirement', 'Star', 'Toy Story', 'Teddy Bear', 'Western', 'Cinco de Mayo',
+    #  'Tea Party', 'Snowflake', 'Baby Is Brewing', 'Woodland Animals', 'Birthday', 'Cars', 'Cars', 'Mouse', 'Birthday',
+    #  'Butterfly', 'Stitch', 'Casino', 'Star', 'Birthday', 'Construction', 'Safari', 'Video Game', 'Valentines Day',
+    #  'Winter Wonderland', 'Frozen', 'Birthday', 'Baby Shower', 'Solar System', 'Wild West', 'Winnie Bear',
+    #  'Hot Air Balloon', 'Dirt Bike', 'Black History Month', 'Birthday', 'Spider', '13th Birthday', 'Football',
+    #  'Elephant', '60th Birthday', 'Rainbow', 'Woodland Animals', 'Hero', 'Race Car', 'Birthday', 'Casino', 'Birthday',
+    #  '50th Birthday', 'Birthday', 'Jungle Animals', 'Retirement', "It's a Girl", 'Woodland Animals', 'Teddy Bear',
+    #  'Dinosaur', 'Casino', 'Rose Gold', 'Twinkle Twinkle Little Star', 'Candyland', 'Bear', 'Wild West', 'Birthday',
+    #  'Tea Party', 'Retirement', '1980s', 'Woodland Animals', 'Train', 'Graduation', 'Music Notes', 'Snowflake',
+    #  'Video Game', 'Donut', 'Princess', 'Winnie', 'Plim Plim', 'Princess', 'Winter Onederland', 'Cowgirl', 'Disco Ball',
+    #  'Unicorn']
 
 
 def load_price_trend_data(file_path: str) -> Dict:
@@ -238,6 +240,8 @@ def process_row_data(
             # 判断价格趋势类型
             if prices_clean and len(prices_clean) >= 3:
                 try:
+                    if asin in ["B0F78QFZW1","B01KM1N1YI","B089NPM4YG","B0DRTVPY34"]:
+                        print(asin)
                     trend_result, detail = classify_price_trend(prices_clean, times_clean, sales_data=sales_json)
                     df.loc[idx, '价格趋势类型'] = trend_result
                     print(f"  第{idx}行: 价格趋势类型 = {trend_result}（有效数据点: {len(prices_clean)}，使用销量筛选）")
@@ -333,7 +337,7 @@ def process_row_data(
             return
 
         if result:
-            can_dev, timing_reason = can_develop(traffic_cycle)
+            can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
             if result and can_dev:
                 df.loc[idx, '经验判断是否开发'] = '是'
                 df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
@@ -356,7 +360,7 @@ def process_row_data(
             df.loc[idx, '经验判断是否开发'] = '待定'
             df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
             return
-        can_dev, timing_reason = can_develop(traffic_cycle)
+        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
         if result:
             if result and can_dev:
                 df.loc[idx, '经验判断是否开发'] = '是'
@@ -379,7 +383,33 @@ def process_row_data(
             df.loc[idx, '经验判断是否开发'] = '待定'
             df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
             return
-        can_dev, timing_reason = can_develop(traffic_cycle)
+        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
+        if result:
+            if result and can_dev:
+                df.loc[idx, '经验判断是否开发'] = '是'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+        else:
+            if timing_reason.startswith('可以开发'):
+                timing_reason = '不建议开发' + timing_reason[4:]
+            df.loc[idx, '经验判断是否开发'] = '否'
+            df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+
+    elif masterKind == 'toys&games' and slaverKind == 'cupcake stands':
+        # 根据规则判断是否开发
+        material = row['材质']
+        result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                        title=title, price_trend=trend_result, material=material)
+
+        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+
+        if sales is None or trend_result is None:
+            df.loc[idx, '经验判断是否开发'] = '待定'
+            df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+            return
+        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
         if result:
             if result and can_dev:
                 df.loc[idx, '经验判断是否开发'] = '是'

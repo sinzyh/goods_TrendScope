@@ -64,6 +64,7 @@ TOYS_GAMES_BANNERS_RULES: PriceRules = {
 PRICE_RULES_BY_MENU: Dict[Tuple[str, str], PriceRules] = {
     ("toys&games", "plates"): TOYS_GAMES_PLATES_RULES,
     ("toys&games", "banners"): TOYS_GAMES_BANNERS_RULES,
+
 }
 
 
