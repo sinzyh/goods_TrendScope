@@ -5,6 +5,21 @@ from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.utils import get_column_letter
 
+from PIL import Image
+import io
+
+def bytes_to_png_bytes(image_bytes: bytes) -> io.BytesIO:
+    """把任意图片 bytes 转成 PNG bytes（兼容 webp/jpg/png/gif 等）"""
+    bio_in = io.BytesIO(image_bytes)
+    with Image.open(bio_in) as im:
+        # 统一转 RGBA，避免透明/调色板模式导致异常
+        im = im.convert("RGBA")
+        bio_out = io.BytesIO()
+        im.save(bio_out, format="PNG")
+        bio_out.seek(0)
+        return bio_out
+
+
 
 def insert_traffic_cycle_images(output_path: str, traffic_cycle_images: Dict[int, Optional[bytes]], df_index_mapping: list):
     """插入流量周期图到Excel
@@ -321,8 +336,10 @@ def insert_product_images(output_path: str):
                     try:
                         resp = session.get(str(url), timeout=10)
                         resp.raise_for_status()
-                        img_bytes = io.BytesIO(resp.content)
-                        img = XLImage(img_bytes)
+                        # img_bytes = io.BytesIO(resp.content)  # 碰见.webp保存的问题
+                        # img = XLImage(img_bytes)
+                        png_io = bytes_to_png_bytes(resp.content)  # ✅ 关键：转 PNG
+                        img = XLImage(png_io)
                         img.width = 75
                         img.height = 75
 

@@ -277,7 +277,7 @@ def classify_price_trend(
                 elif first == latest:
                     label = '平稳'
                 else:
-                    label = '未知'
+                    label = '波动'
         elif trend_dir == 'decreasing':
             label = '下降'
             if latest<first:
@@ -288,7 +288,7 @@ def classify_price_trend(
                 elif first == latest:
                     label = '平稳'
                 else:
-                    label = '未知'
+                    label = '波动'
         else:
             if volatility >= 0.05:
                 label = '波动'
@@ -300,7 +300,7 @@ def classify_price_trend(
         elif first == latest:
             label = '平稳'
         else:
-            label = '未知'
+            label = '波动'
     detail = {
         "latest_price": latest,
         "high_quantile": high_q,

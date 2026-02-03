@@ -1,5 +1,6 @@
 import ast
 import json
+import os
 from typing import Dict, Optional
 import pandas as pd
 from langchain_core.prompts import ChatPromptTemplate
@@ -11,6 +12,7 @@ from determining_traffic_cycle import determine_traffic_cycle
 from extract_keyword_series import extract_keyword_series
 from format_traffic_cycle_text import format_traffic_cycle_text
 from get_last_month_saler import get_last_month_saler
+from kinds_dev import classify_season_from_traffic_cycle
 from pass_rule import pass_rule
 from plot_search_trend import plot_traffic_cycle_json_to_bytes, plot_sales_trend_to_bytes, plot_price_trend_to_bytes
 from price_trend_detector import clean_price_and_time, classify_price_trend
@@ -84,13 +86,35 @@ def extract_themes_from_titles(titles: list, llm: ChatOpenAI) -> list:
     ])
 
     messages = prompt.format_messages(titles=titles)
-    # resp = llm.invoke(messages)
-    # result = json.loads(resp.content)
-    # print(result)
-    # return result
+    resp = llm.invoke(messages)
+    result = json.loads(resp.content)
+    print(result)
+    return result
+    # return [i for i in range(0,172)]
+    # ['Pastel', 'Unicorn', 'Happy Birthday', 'Rainbow', 'Pastel Rainbow', 'Dinosaur', 'Rainbow', 'Unicorn',
+    #  'Pastel Rainbow', 'Construction', 'Polka Dots', 'Blue and Gold', 'Ice Cream', 'Dots', 'Dinosaur', 'Dots', 'Puppy',
+    #  'Dots', 'Dog', 'Building Blocks', 'Colorful Dots', 'Outer Space', 'Football', 'Christmas', 'Construction',
+    #  'Colorful Dots', 'Cat', 'Scalloped Edge', 'Cowboy', 'Dog', 'Witch', 'Rose Gold', 'Basketball', "Valentine's Day",
+    #  'Football', 'Baby Boy', "Galentine's Day", 'Football', '1st Birthday', 'Capybara', "Valentine's Day", 'Iridescent',
+    #  'Axolotl', 'World Flags', 'Pastel', 'Ice Cream', 'Bow', 'Sports', 'Dinosaur', 'Wildflower', 'Building Blocks',
+    #  'Puppy', "Galentine's Day", 'Cartoon Animation', 'Pink Bow', 'Dinosaur', 'Football', 'Sage Greenery', 'Scalloped',
+    #  'Gold', 'Rose Gold', 'Basketball', 'Pink Bow', 'Mario Bros', 'Spider', 'Teddy Bear', 'Video Games', 'Outer Space',
+    #  'Strawberry', 'Cat', 'Cherry', 'Outer Space', 'Ice Cream', 'Scalloped', 'Colorful Dots', 'Wildflower', 'Unicorn',
+    #  "It's a Boy", '13th Birthday', 'Outer Space', 'Pink Bow', 'Two Sweet', 'Minnie', 'Football', 'Dots', 'Witch',
+    #  'Gingham', 'White and Gold', 'Rose Gold', 'Rose Gold', 'Pastel', 'Green', 'Construction', 'Colorful Dots',
+    #  'Scalloped', 'Sweet Sassy and 7', 'Football', 'Dinosaur', 'Building Blocks', 'Strawberry', 'Ocean', 'Game Night',
+    #  'Five Nights', 'Iridescent', 'Football', 'Race Car', "Valentine's Day", 'Cat', 'Paint Party', 'Princess',
+    #  'Dart War', 'Super Hero', 'Gymnastics', 'Farm Animals', 'Ice Cream', 'Cake', 'Rose Gold', 'Rose Gold', 'Mario',
+    #  'Monster Truck', "90's", 'Llama', 'Scalloped', 'Casino', 'Navy Blue and Silver', 'Colorful Dots', 'Teddy Bear',
+    #  'Jungle', 'Building Blocks', 'Pastel', 'Witch', 'Minnie', 'Video Game', 'Gingham', 'Fairy', 'Pop Music',
+    #  'Football', 'Race Car', 'Two Fast', 'Basketball', 'Dots', 'Football', 'Music', 'Gold', 'Rose Gold', 'Bow',
+    #  'Rose Gold', 'Farm Animals', 'Wild Three', 'Scalloped Edge', 'Golf', 'Art', 'Wild One', 'Bear', 'Minnie', 'Cherry',
+    #  'Axolotl', 'Football', 'Dark Blue', 'Race Car', 'Rainbow', 'Sports', 'Need Four Speed', '16th Birthday',
+    #  'We Can Bearly Wait', 'Football', 'Dinosaur', 'Ice Cream', 'Pastel', 'Rose Gold', 'Ice Cream', 'Princess']
+
     #
     # 模拟数据（实际使用时取消注释上面的代码）
-    return [i for i in range(0,100)]
+    # return [i for i in range(0,322)]
     # return ['Demon Movie Hunters', 'Butterfly', 'Football', 'Over The Moon', 'Cold Outside', 'Sage Green', 'Hot Pink', 'Wildflower', 'Snowflake', 'Emergency Vehicle', 'Coquette', 'Pink Mouse', 'Horned Horse', 'Light Pink', 'Iridescent', 'Barbie', 'Three Rex', 'Winter Onederland', 'Woodland', 'Farm Animals', 'Woodland Creatures', 'Axolotl', 'Sports', 'Superhero', 'Rose Gold', 'Winter Onederland', 'Green', 'Dinosaur', 'Building Blocks', 'Mermaid', 'Wonderland', 'Video Game', 'Light Pink', 'Monster Truck', 'Street', 'Football', 'Mermaid', 'Race Car', 'Black', 'Circus', 'Navy Blue and Silver', 'Pixel', 'Oh Deer', 'CoComelon', 'Pancakes and Pajamas', 'Under the Sea', 'Woodland', 'Demon', 'Camp Bachelorette', 'Strawberry', 'Monster', 'Undersea', 'Toy', 'Cherry', 'Race Car', 'Blue Gingham', 'Coquette', 'Gone Fishing', 'Bear', 'My First Rodeo', 'Witch', 'Axolotl', 'Sports', 'Sleepover', 'Monster Truck', 'Spider', 'Unicorn', 'Soccer', 'Minnie', 'Bow', 'How Time Flies', 'Peppa Pig', 'Ice Skating', 'Winter Onederland', 'Cartoon', '90 and Fabulous', 'Princess', 'Dinosaur', 'Paint Party', 'Casino Dice', 'Dinosaur', 'Spring Wildflower', 'Mario', 'Sage Greenery', 'Dinosaur', 'Summer Floral', 'Jungle Animals', 'Coquette', 'Navy Blue and Silver', 'Strawberry', 'Mexican Serape', 'Tropical Hawaii', 'Construction', 'Reptile', 'Owl', 'Strawberry', 'Something Blue', 'Cherry', 'Red']
     # return ['Demon Movie Hunters', 'Birthday', 'Birthday', 'K Pop Demon', 'Football', 'Race Car', '50th Birthday',
     #  '69th Birthday', '80s', 'Birthday', 'Mouse', 'Winter', 'Race Car', 'Teddy Bear', 'Silly Goose', 'Chinese New Year',
@@ -315,63 +339,114 @@ def process_row_data(
 
     df.loc[idx, '核心词周期'] = str(core_word_cell_text)
 
-    if masterKind == 'toys&games' and slaverKind == 'plates':
-        # 根据规则判断是否开发
-        if sales is None or price is None:
-            result = False
-            reason = '销量或价格是空'
-            pcs = None
-        else:
-            result, reason, pcs = pass_rule(main_menu='Toys&Games', sub_menu='Plates', sales=sales, price=price, title=title)
+    # 规则层处理
+    development_kind = os.getenv('DEVELOPMENT_KIND')
+    if development_kind == '榜单开发':
+        if masterKind == 'toys&games' and slaverKind == 'plates':
+            # 根据规则判断是否开发
+            if sales is None or price is None:
+                result = False
+                reason = '销量或价格是空'
+                pcs = None
+            else:
+                result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price, title=title)
 
-        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+            df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
 
-        if pcs is None:
-            df.loc[idx, '经验判断是否开发'] = '待定'
-            df.loc[idx, '规则层建议'] = reason
-            return
+            if pcs is None:
+                df.loc[idx, '经验判断是否开发'] = '待定'
+                df.loc[idx, '规则层建议'] = reason
+                return
 
-        if price is None:
-            df.loc[idx, '经验判断是否开发'] = '待定'
-            df.loc[idx, '规则层建议'] = '上月无参照价格'
-            return
+            if price is None:
+                df.loc[idx, '经验判断是否开发'] = '待定'
+                df.loc[idx, '规则层建议'] = '上月无参照价格'
+                return
 
-        if result:
+            if result:
+                can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
+                if result and can_dev:
+                    df.loc[idx, '经验判断是否开发'] = '是'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+                else:
+                    df.loc[idx, '经验判断是否开发'] = '否'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason
+        elif masterKind == 'toys&games' and slaverKind == 'banners':
+            # 根据规则判断是否开发
+
+            result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                                title=title,price_trend=trend_result)
+
+            df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+
+
+            if sales is None or trend_result is None:
+                df.loc[idx, '经验判断是否开发'] = '待定'
+                df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+                return
             can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
-            if result and can_dev:
-                df.loc[idx, '经验判断是否开发'] = '是'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            if result:
+                if result and can_dev:
+                    df.loc[idx, '经验判断是否开发'] = '是'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+                else:
+                    df.loc[idx, '经验判断是否开发'] = '否'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
             else:
                 df.loc[idx, '经验判断是否开发'] = '否'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
-        else:
-            df.loc[idx, '经验判断是否开发'] = '否'
-            df.loc[idx, '规则层建议'] = reason
-    elif masterKind == 'toys&games' and slaverKind == 'banners':
-        # 根据规则判断是否开发
+                df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+        elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+            # 根据规则判断是否开发
 
-        result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
-                                            title=title,price_trend=trend_result)
+            result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                            title=title, price_trend=trend_result)
 
-        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+            df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
 
+            if sales is None or trend_result is None:
+                df.loc[idx, '经验判断是否开发'] = '待定'
+                df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+                return
+            can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
+            if result:
+                if result and can_dev:
+                    df.loc[idx, '经验判断是否开发'] = '是'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+                else:
+                    df.loc[idx, '经验判断是否开发'] = '否'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            else:
+                if timing_reason.startswith('可以开发'):
+                    timing_reason = '不建议开发' + timing_reason[4:]
+                df.loc[idx, '经验判断是否开发'] = '否'
+                df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+        elif masterKind == 'toys&games' and slaverKind == 'cupcake stands':
+            # 根据规则判断是否开发
+            material = row['材质']
+            result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
+                                            title=title, price_trend=trend_result, material=material)
 
-        if sales is None or trend_result is None:
-            df.loc[idx, '经验判断是否开发'] = '待定'
-            df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
-            return
-        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
-        if result:
-            if result and can_dev:
-                df.loc[idx, '经验判断是否开发'] = '是'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+            df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
+
+            if sales is None or trend_result is None:
+                df.loc[idx, '经验判断是否开发'] = '待定'
+                df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
+                return
+            can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
+            if result:
+                if result and can_dev:
+                    df.loc[idx, '经验判断是否开发'] = '是'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
+                else:
+                    df.loc[idx, '经验判断是否开发'] = '否'
+                    df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
             else:
                 df.loc[idx, '经验判断是否开发'] = '否'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
-        else:
-            df.loc[idx, '经验判断是否开发'] = '否'
-            df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
-    elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+                df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+    elif development_kind == '店铺开发':
         # 根据规则判断是否开发
 
         result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
@@ -383,7 +458,7 @@ def process_row_data(
             df.loc[idx, '经验判断是否开发'] = '待定'
             df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
             return
-        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
+        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle, flow_type=flow_type)
         if result:
             if result and can_dev:
                 df.loc[idx, '经验判断是否开发'] = '是'
@@ -396,27 +471,9 @@ def process_row_data(
                 timing_reason = '不建议开发' + timing_reason[4:]
             df.loc[idx, '经验判断是否开发'] = '否'
             df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
-
-    elif masterKind == 'toys&games' and slaverKind == 'cupcake stands':
-        # 根据规则判断是否开发
-        material = row['材质']
-        result, reason, pcs = pass_rule(main_menu=masterKind, sub_menu=slaverKind, sales=sales, price=price,
-                                        title=title, price_trend=trend_result, material=material)
-
-        df.loc[idx, 'pcs'] = str(pcs) + ' pcs' if pcs is not None else ''
-
-        if sales is None or trend_result is None:
-            df.loc[idx, '经验判断是否开发'] = '待定'
-            df.loc[idx, '规则层建议'] = '上月销量或价格趋势不存在'
-            return
-        can_dev, timing_reason = can_develop(traffic_cycles=traffic_cycle,flow_type=flow_type)
-        if result:
-            if result and can_dev:
-                df.loc[idx, '经验判断是否开发'] = '是'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
-            else:
-                df.loc[idx, '经验判断是否开发'] = '否'
-                df.loc[idx, '规则层建议'] = reason + '；' + timing_reason
-        else:
-            df.loc[idx, '经验判断是否开发'] = '否'
-            df.loc[idx, '规则层建议'] = reason + ';' + timing_reason
+    elif development_kind == '类目开发':
+        # 增加一列，季度
+        # 大于8个月的归为全年
+        # 否则判断当前月份涉及了哪些季度，
+        season_result = classify_season_from_traffic_cycle(sales_hist=sales_json, traffic_cycle=traffic_cycle)
+        df.loc[idx,'季度统计'] = season_result

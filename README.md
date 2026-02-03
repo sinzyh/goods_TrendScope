@@ -287,9 +287,9 @@ OPENAI_API_KEY=your_api_key_here
 在 `main.py` 中修改文件路径：
 
 ```python
-file_path1 = 'input_file/2025-12-26/best-sellers-20251224_154540.xlsx'
-file_path2 = 'input_file/2025-12-26/crawl-20251226-bsr.xlsx'
-price_trend_file_path = 'input_file/2025-12-26/crawl-20251226-price-trend.json'
+file_path1 = 'input_file/rank/2025-12-26/best-sellers-20251224_154540.xlsx'
+file_path2 = 'input_file/rank/2025-12-26/crawl-20251226-bsr.xlsx'
+price_trend_file_path = 'input_file/rank/2025-12-26/crawl-20251226-price-trend.json'
 ```
 
 ### 5. 运行分析

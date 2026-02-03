@@ -125,215 +125,415 @@ def analyze_product_value_bs(
     explanations = []
     isDevelop = []
     i = 0
+    development_kind = os.getenv("DEVELOPMENT_KIND")
     for _, row in df.iterrows():
 
         if i == 6:
             print(i)
-        i+=1
+        i += 1
         # 检查"是否开发"列的值
         should_develop = str(row.get("经验判断是否开发", "")).strip()
         cycle = str(row.get("核心词周期", "")).strip()
         price_trend = str(row.get("价格趋势类型", "")).strip()
         price = str(row.get('价格', '')).strip()
         reason_develop = str(row.get('规则层建议', '')).strip()
-        sales = str(row.get('上月销量','')).strip()
+        sales = str(row.get('上月销量', '')).strip()
         title = str(row.get('标题', '')).strip()
 
         # 只有在"是否开发"列为"是"时才进行判断，因为这时当前商品已经通过价格规则判断了
         # 判断是否开发的时候有四个步骤：数据完整性、人工规则、流量周期、价格
-        if masterKind == 'toys&games' and slaverKind == 'plates':
-            if judgment_data_complete(masterKind=masterKind,slaverKind=slaverKind,price=price, has_traffic_reason=cycle, pcs_reason=reason_develop):
-                # 数据完整
-                if judgment_person_rule(reason=reason_develop):
-                    # 存在对应人工规则
-                    if judgement_pass_person_rule(reason=reason_develop):
-                        # 通过人工规则
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                if price_trend == '上升':
-                                    reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势上升'
-                                    is_develop = '开发'
-                                elif price_trend == '波动' or price_trend == '下降':
-                                    reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势波动/下降'
-                                    is_develop = '追踪'
-                                elif price_trend == '平稳':
-                                    reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势平稳'
-                                    is_develop = '开发'
+        if development_kind == '榜单开发':
+            if masterKind == 'toys&games' and slaverKind == 'plates':
+                if judgment_data_complete(development_kind=development_kind,masterKind=masterKind, slaverKind=slaverKind, price=price,
+                                          has_traffic_reason=cycle, pcs_reason=reason_develop):
+                    # 数据完整
+                    if judgment_person_rule(reason=reason_develop):
+                        # 存在对应人工规则
+                        if judgement_pass_person_rule(reason=reason_develop):
+                            # 通过人工规则
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    if price_trend == '上升':
+                                        reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势上升'
+                                        is_develop = '开发'
+                                    elif price_trend == '波动' or price_trend == '下降':
+                                        reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势波动/下降'
+                                        is_develop = '追踪'
+                                    elif price_trend == '平稳':
+                                        reason = '数据完整，通过人工规则，能赶上流量周期，价格趋势平稳'
+                                        is_develop = '开发'
+                                    else:
+                                        reason = ''
+                                        is_develop = ''
                                 else:
-                                    reason = ''
-                                    is_develop = ''
+                                    # 不能赶上流量周期
+                                    if price_trend == '上升':
+                                        reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势上升'
+                                        is_develop = '追踪'
+                                    elif price_trend == '波动' or price_trend == '下降':
+                                        reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势波动/下降'
+                                        is_develop = '待定'
+                                    elif price_trend == '平稳':
+                                        reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势平稳'
+                                        is_develop = '追踪'
+                                    else:
+                                        reason = ''
+                                        is_develop = ''
                             else:
-                                # 不能赶上流量周期
+                                # 未识别到流量周期
                                 if price_trend == '上升':
-                                    reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势上升'
+                                    reason = '数据完整，通过人工规则，没有识别到流量周期，价格趋势上升'
                                     is_develop = '追踪'
-                                elif price_trend == '波动' or price_trend == '下降':
-                                    reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势波动/下降'
+                                elif price_trend == '波动' or price_trend == '下降' or price_trend == '平稳':
+                                    reason = '数据完整，没通过人工规则，识别不到流量周期，价格波动/下降/平稳'
                                     is_develop = '待定'
-                                elif price_trend == '平稳':
-                                    reason = '数据完整，通过人工规则，赶不上流量周期，价格趋势平稳'
-                                    is_develop = '追踪'
                                 else:
                                     reason = ''
                                     is_develop = ''
                         else:
-                            # 未识别到流量周期
-                            if price_trend == '上升':
-                                reason = '数据完整，通过人工规则，没有识别到流量周期，价格趋势上升'
-                                is_develop = '追踪'
-                            elif price_trend == '波动' or price_trend == '下降' or price_trend == '平稳':
-                                reason = '数据完整，没通过人工规则，识别不到流量周期，价格波动/下降/平稳'
-                                is_develop = '待定'
-                            else:
-                                reason = ''
-                                is_develop = ''
+                            # 没通过规则
+                            reason = '数据完整，没通过人工规则'
+                            is_develop = '不开发'
                     else:
-                        # 没通过规则
-                        reason = '数据完整，没通过人工规则'
-                        is_develop = '不开发'
+                        # 不存在人工规则
+                        if price_trend == '上升':
+                            reason = '数据完整，没有对应人工规则，价格趋势上升'
+                            is_develop = '追踪'
+                        elif price_trend == '波动' or price_trend == '下降' or price_trend == '平稳':
+                            reason = '数据完整，没有对应人工规则，价格趋势波动/下降/平稳'
+                            is_develop = '不开发'
+                        else:
+                            reason = ''
+                            is_develop = ''
                 else:
-                    # 不存在人工规则
-                    if price_trend == '上升':
-                        reason = '数据完整，没有对应人工规则，价格趋势上升'
-                        is_develop = '追踪'
-                    elif price_trend == '波动' or price_trend == '下降' or price_trend == '平稳':
-                        reason = '数据完整，没有对应人工规则，价格趋势波动/下降/平稳'
-                        is_develop = '不开发'
-                    else:
-                        reason = ''
-                        is_develop = ''
-            else:
-                # 数据不完整
-                if price == 'nan':
-                    # 没有价格
-                    reason = '数据不完整，缺少价格'
-                    is_develop = '待定'
-                elif cycle == 'nan':
-                    # 没有流量周期
-                    reason = '数据不完整，缺少流量周期'
-                    is_develop = '待定'
-                else:
-                    # 没有pcs情况
-                    if price_trend == '上升':
-                        reason = '数据不完整，缺少pcs，价格趋势上升'
-                        is_develop = '追踪'
-                    elif price_trend == '波动' or price_trend == '下降':
-                        reason = '数据不完整，缺少pcs，价格趋势波动/下降'
-                        is_develop = '不开发'
-                    elif price_trend == '平稳':
-                        reason = '数据不完整，有价格，有流量周期，价格趋势平稳'
+                    # 数据不完整
+                    if price == 'nan':
+                        # 没有价格
+                        reason = '数据不完整，缺少价格'
+                        is_develop = '待定'
+                    elif cycle == 'nan':
+                        # 没有流量周期
+                        reason = '数据不完整，缺少流量周期'
                         is_develop = '待定'
                     else:
-                        reason = ''
-                        is_develop = ''
-        elif masterKind == 'toys&games' and slaverKind == 'banners':
-            if judgment_data_complete(masterKind=masterKind, slaverKind=slaverKind,price_trend=price_trend, sales=sales):
-                # 数据完整
-                if float(sales) >= 50:
-                    if price_trend == '上升':
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势上升，能赶上流量周期'
-                                is_develop = '开发'
-                            else:
-                                # 无法赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势上升，赶不上流量周期'
-                                is_develop = '追踪'
-                        else:
-                            # 无法识别到流量周期
-                            reason = '数据完整，销量≥50，价格趋势上升，识别不到流量周期'
-                            is_develop = '开发'
-                    elif price_trend == '波动' or price_trend == '下降':
-                        # 波动/下降
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势波动/下降，能赶上流量周期'
-                                is_develop = '追踪'
-                            else:
-                                # 无法赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势波动/下降，赶不上流量周期'
-                                is_develop = '不开发'
-                        else:
-                            # 无法识别到流量周期
-                            reason = '数据完整，销量≥50，价格趋势波动/下降，识别不到流量周期'
+                        # 没有pcs情况
+                        if price_trend == '上升':
+                            reason = '数据不完整，缺少pcs，价格趋势上升'
                             is_develop = '追踪'
-                    else:
-                        # 价格趋势平稳
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势平稳，能赶上流量周期'
-                                is_develop = '开发'
-                            else:
-                                # 无法赶上流量周期
-                                reason = '数据完整，销量≥50，价格趋势平稳，赶不上流量周期'
-                                is_develop = '追踪'
-                        else:
-                            # 无法识别到流量周期
-                            reason = '数据完整，销量≥50，价格趋势平稳，识别不到流量周期'
-                            is_develop = '开发'
-                else:
-                    if price_trend == '上升':
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量<50，价格趋势上升，能赶上流量周期'
-                                is_develop = '追踪'
-                            else:
-                                # 赶不上流量周期
-                                reason = '数据完整，销量<50，价格趋势上升，赶不上流量周期'
-                                is_develop = '不开发'
-                        else:
-                            reason = '数据完整，销量<50，价格趋势上升，识别不到流量周期'
-                            is_develop = '追踪'
-                    elif price_trend == '波动' or price_trend == '下降':
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量<50，价格趋势波动/下降，能赶上流量周期'
-                                is_develop = '待定'
-                            else:
-                                reason = '数据完整，销量<50，价格趋势波动/下降，赶不上流量周期'
-                                is_develop = '不开发'
-                        else:
-                            reason = '数据完整，销量<50，价格趋势波动/下降，识别不到流量周期'
+                        elif price_trend == '波动' or price_trend == '下降':
+                            reason = '数据不完整，缺少pcs，价格趋势波动/下降'
+                            is_develop = '不开发'
+                        elif price_trend == '平稳':
+                            reason = '数据不完整，有价格，有流量周期，价格趋势平稳'
                             is_develop = '待定'
-                    else:
-                        if judgement_identify_traffic_cycle(reason=reason_develop):
-                            # 可以识别到流量周期
-                            if judgement_catch_up_traffic_cycle(reason=reason_develop):
-                                # 可以赶上流量周期
-                                reason = '数据完整，销量<50，价格趋势平稳，能赶上流量周期'
-                                is_develop = '追踪'
+                        else:
+                            reason = ''
+                            is_develop = ''
+            elif masterKind == 'toys&games' and slaverKind == 'banners':
+                if judgment_data_complete(development_kind=development_kind,masterKind=masterKind, slaverKind=slaverKind, price_trend=price_trend,
+                                          sales=sales):
+                    # 数据完整
+                    if float(sales) >= 50:
+                        if price_trend == '上升':
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势上升，能赶上流量周期'
+                                    is_develop = '开发'
+                                else:
+                                    # 无法赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势上升，赶不上流量周期'
+                                    is_develop = '追踪'
                             else:
-                                reason = '数据完整，销量<50，价格趋势平稳，赶不上流量周期'
+                                # 无法识别到流量周期
+                                reason = '数据完整，销量≥50，价格趋势上升，识别不到流量周期'
+                                is_develop = '开发'
+                        elif price_trend == '波动' or price_trend == '下降':
+                            # 波动/下降
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势波动/下降，能赶上流量周期'
+                                    is_develop = '追踪'
+                                else:
+                                    # 无法赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势波动/下降，赶不上流量周期'
+                                    is_develop = '不开发'
+                            else:
+                                # 无法识别到流量周期
+                                reason = '数据完整，销量≥50，价格趋势波动/下降，识别不到流量周期'
+                                is_develop = '追踪'
+                        else:
+                            # 价格趋势平稳
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势平稳，能赶上流量周期'
+                                    is_develop = '开发'
+                                else:
+                                    # 无法赶上流量周期
+                                    reason = '数据完整，销量≥50，价格趋势平稳，赶不上流量周期'
+                                    is_develop = '追踪'
+                            else:
+                                # 无法识别到流量周期
+                                reason = '数据完整，销量≥50，价格趋势平稳，识别不到流量周期'
+                                is_develop = '开发'
+                    else:
+                        if price_trend == '上升':
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量<50，价格趋势上升，能赶上流量周期'
+                                    is_develop = '追踪'
+                                else:
+                                    # 赶不上流量周期
+                                    reason = '数据完整，销量<50，价格趋势上升，赶不上流量周期'
+                                    is_develop = '不开发'
+                            else:
+                                reason = '数据完整，销量<50，价格趋势上升，识别不到流量周期'
+                                is_develop = '追踪'
+                        elif price_trend == '波动' or price_trend == '下降':
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量<50，价格趋势波动/下降，能赶上流量周期'
+                                    is_develop = '待定'
+                                else:
+                                    reason = '数据完整，销量<50，价格趋势波动/下降，赶不上流量周期'
+                                    is_develop = '不开发'
+                            else:
+                                reason = '数据完整，销量<50，价格趋势波动/下降，识别不到流量周期'
                                 is_develop = '待定'
                         else:
-                            reason = '数据完整，销量<50，价格趋势平稳，识别不到流量周期'
-                            is_develop = '追踪'
+                            if judgement_identify_traffic_cycle(reason=reason_develop):
+                                # 可以识别到流量周期
+                                if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                    # 可以赶上流量周期
+                                    reason = '数据完整，销量<50，价格趋势平稳，能赶上流量周期'
+                                    is_develop = '追踪'
+                                else:
+                                    reason = '数据完整，销量<50，价格趋势平稳，赶不上流量周期'
+                                    is_develop = '待定'
+                            else:
+                                reason = '数据完整，销量<50，价格趋势平稳，识别不到流量周期'
+                                is_develop = '追踪'
 
-            else:
-                # 数据不完整
-                if sales == 'nan':
-                    reason = '数据不完整，没有销量'
-                    is_develop = '待定'
-                elif price_trend  == 'nan':
-                    reason = '数据不完整，有销量没有价格趋势'
-                    is_develop = '待定'
                 else:
-                    reason = '数据不完整，有销量，有价格趋势，没有流量周期'
-                    is_develop = '追踪'
-        elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
-            if judgment_data_complete(masterKind=masterKind, slaverKind=slaverKind,price=price,price_trend=price_trend, sales=sales):
+                    # 数据不完整
+                    if sales == 'nan':
+                        reason = '数据不完整，没有销量'
+                        is_develop = '待定'
+                    elif price_trend == 'nan':
+                        reason = '数据不完整，有销量没有价格趋势'
+                        is_develop = '待定'
+                    else:
+                        reason = '数据不完整，有销量，有价格趋势，没有流量周期'
+                        is_develop = '追踪'
+            elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+                if judgment_data_complete(development_kind=development_kind,masterKind=masterKind, slaverKind=slaverKind, price=price,
+                                          price_trend=price_trend, sales=sales):
+                    # 数据完整
+                    if parse_price(price) >= 9.99:
+                        if float(sales) >= 50:
+                            if price_trend == '上升':
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势上升，能赶上流量周期'
+                                        is_develop = '开发'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势上升，赶不上流量周期'
+                                        is_develop = '追踪'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格≥$9.99，销量≥50，价格趋势上升，识别不到流量周期'
+                                    is_develop = '开发'
+                            elif price_trend == '波动' or price_trend == '下降':
+                                # 波动/下降
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势波动/下降，能赶上流量周期'
+                                        is_develop = '追踪'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势波动/下降，赶不上流量周期'
+                                        is_develop = '待定'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格≥$9.99，销量≥50，价格趋势波动/下降，识别不到流量周期'
+                                    is_develop = '追踪'
+                            else:
+                                # 价格趋势平稳
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势平稳，能赶上流量周期'
+                                        is_develop = '开发'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量≥50，价格趋势平稳，赶不上流量周期'
+                                        is_develop = '追踪'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格≥$9.99，销量≥50，价格趋势平稳，识别不到流量周期'
+                                    is_develop = '追踪'
+                        else:
+                            if price_trend == '上升':
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势上升，能赶上流量周期'
+                                        is_develop = '追踪'
+                                    else:
+                                        # 赶不上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势上升，赶不上流量周期'
+                                        is_develop = '待定'
+                                else:
+                                    reason = '数据完整，价格≥$9.99，销量<50，价格趋势上升，识别不到流量周期'
+                                    is_develop = '追踪'
+                            elif price_trend == '波动' or price_trend == '下降':
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势波动/下降，能赶上流量周期'
+                                        is_develop = '待定'
+                                    else:
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势波动/下降，赶不上流量周期'
+                                        is_develop = '不开发'
+                                else:
+                                    reason = '数据完整，价格≥$9.99，销量<50，价格趋势波动/下降，识别不到流量周期'
+                                    is_develop = '待定'
+                            else:
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势平稳，能赶上流量周期'
+                                        is_develop = '追踪'
+                                    else:
+                                        reason = '数据完整，价格≥$9.99，销量<50，价格趋势平稳，赶不上流量周期'
+                                        is_develop = '待定'
+                                else:
+                                    reason = '数据完整，价格≥$9.99，销量<50，价格趋势平稳，识别不到流量周期'
+                                    is_develop = '追踪'
+                    else:
+                        # 价格小于9.99
+                        if float(sales) >= 50:
+                            if price_trend == '上升':
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势上升，能赶上流量周期'
+                                        is_develop = '追踪'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势上升，赶不上流量周期'
+                                        is_develop = '待定'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格<$9.99，销量≥50，价格趋势上升，识别不到流量周期'
+                                    is_develop = '追踪'
+                            elif price_trend == '波动' or price_trend == '下降':
+                                # 波动/下降
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势波动/下降，能赶上流量周期'
+                                        is_develop = '待定'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势波动/下降，赶不上流量周期'
+                                        is_develop = '不开发'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格<$9.99，销量≥50，价格趋势波动/下降，识别不到流量周期'
+                                    is_develop = '待定'
+                            else:
+                                # 价格趋势平稳
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势平稳，能赶上流量周期'
+                                        is_develop = '追踪'
+                                    else:
+                                        # 无法赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量≥50，价格趋势平稳，赶不上流量周期'
+                                        is_develop = '待定'
+                                else:
+                                    # 无法识别到流量周期
+                                    reason = '数据完整，价格<$9.99，销量≥50，价格趋势平稳，识别不到流量周期'
+                                    is_develop = '追踪'
+                        else:
+                            if price_trend == '上升':
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量<50，价格趋势上升，能赶上流量周期'
+                                        is_develop = '待定'
+                                    else:
+                                        # 赶不上流量周期
+                                        reason = '数据完整，价格<$9.99，销量<50，价格趋势上升，赶不上流量周期'
+                                        is_develop = '不开发'
+                                else:
+                                    reason = '数据完整，价格<$9.99，销量<50，价格趋势上升，识别不到流量周期'
+                                    is_develop = '待定'
+                            elif price_trend == '波动' or price_trend == '下降':
+                                reason = '数据完整，价格<$9.99，销量<50，价格趋势波动/下降'
+                                is_develop = '不开发'
+
+                            else:
+                                if judgement_identify_traffic_cycle(reason=reason_develop):
+                                    # 可以识别到流量周期
+                                    if judgement_catch_up_traffic_cycle(reason=reason_develop):
+                                        # 可以赶上流量周期
+                                        reason = '数据完整，价格<$9.99，销量<50，价格趋势平稳，能赶上流量周期'
+                                        is_develop = '待定'
+                                    else:
+                                        reason = '数据完整，价格<$9.99，销量<50，价格趋势平稳，赶不上流量周期'
+                                        is_develop = '不开发'
+                                else:
+                                    reason = '数据完整，价格<$9.99，销量<50，价格趋势平稳，识别不到流量周期'
+                                    is_develop = '待定'
+
+
+                else:
+                    # 数据不完整
+                    if price == 'nan':
+                        reason = '数据不完整，没有价格'
+                        is_develop = '待定'
+                    elif sales == 'nan':
+                        reason = '数据不完整，有价格，没有销量'
+                        is_develop = '待定'
+                    elif price_trend == 'nan':
+                        reason = '数据不完整，有价格，有销量，没有价格趋势'
+                        is_develop = '待定'
+                    else:
+                        reason = '追踪'
+                        is_develop = '数据不完整，有价格，有销量，有价格趋势，没有流量周期'
+            else:
+                reason = ''
+                is_develop = ''
+        elif development_kind == '店铺开发':
+            if judgment_data_complete(development_kind=development_kind,masterKind=masterKind, slaverKind=slaverKind, price=price,
+                                      price_trend=price_trend, sales=sales):
                 # 数据完整
                 if parse_price(price) >= 9.99:
                     if float(sales) >= 50:
@@ -507,8 +707,6 @@ def analyze_product_value_bs(
                             else:
                                 reason = '数据完整，价格<$9.99，销量<50，价格趋势平稳，识别不到流量周期'
                                 is_develop = '待定'
-
-
             else:
                 # 数据不完整
                 if price == 'nan':
@@ -524,14 +722,13 @@ def analyze_product_value_bs(
                     reason = '追踪'
                     is_develop = '数据不完整，有价格，有销量，有价格趋势，没有流量周期'
         else:
-            reason = ''
-            is_develop = ''
+            reason = '错误开发类别'
+            is_develop = '错误开发类别'
 
         explanations.append(reason)
         isDevelop.append(is_develop)
     df["开发结论"] = isDevelop
     df["开发结论说明"] = explanations
-
 
     # 如果提供了输出路径，则保存到Excel
     if output_path:
@@ -545,32 +742,44 @@ def analyze_product_value_bs(
     return df
 
 
-def judgment_data_complete(masterKind:str,slaverKind:str,price:str=None, has_traffic_reason:str=None, pcs_reason:str=None, price_trend:str=None, sales:str=None)->bool:
-    if masterKind == 'toys&games' and slaverKind == 'plates':
-        if price is None or '未识别到明显周期' in has_traffic_reason or 'pcs解析失败' in pcs_reason:
-            return False
-    elif masterKind == 'toys&games' and slaverKind == 'banners':
-        if price_trend is None or sales is None:
-            return False
-    elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+def judgment_data_complete(development_kind:str,masterKind: str = None, slaverKind: str = None, price: str = None,
+                           has_traffic_reason: str = None, pcs_reason: str = None, price_trend: str = None,
+                           sales: str = None, ) -> bool:
+    if development_kind == '榜单开发':
+        if masterKind == 'toys&games' and slaverKind == 'plates':
+            if price is None or '未识别到明显周期' in has_traffic_reason or 'pcs解析失败' in pcs_reason:
+                return False
+        elif masterKind == 'toys&games' and slaverKind == 'banners':
+            if price_trend is None or sales is None:
+                return False
+        elif masterKind == 'toys&games' and slaverKind == 'centerpieces':
+            if price == 'nan' or price_trend is None or sales == 'nan':
+                return False
+    elif development_kind == '店铺开发':
         if price == 'nan' or price_trend is None or sales == 'nan':
             return False
     return True
 
-def judgment_person_rule(reason:str)->bool:
+
+def judgment_person_rule(reason: str) -> bool:
     return '该类目下没有' not in reason
 
-def judgement_pass_person_rule(reason:str)->bool:
+
+def judgement_pass_person_rule(reason: str) -> bool:
     return '通过规则校验' in reason
 
-def judgement_identify_traffic_cycle(reason:str)->bool:
+
+def judgement_identify_traffic_cycle(reason: str) -> bool:
     return '未识别到流量周期' not in reason
 
-def judgement_catch_up_traffic_cycle(reason:str)-> bool:
+
+def judgement_catch_up_traffic_cycle(reason: str) -> bool:
     if '可赶上' in reason:
         return True
     else:
         return False
+
+
 if __name__ == '__main__':
     # analyze_product_value_nr(data='./result/流量周期分析结果_20251230.xlsx', output_path='result/nr/潜在价值结果/分析后_潜在价值_20251230.xlsx')
     analyze_product_value_bs(data='./result/bs/流量周期分析结果_20260104.xlsx',
